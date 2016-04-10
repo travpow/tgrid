@@ -1,12 +1,12 @@
 package com.tspowell.grid.containers
 
 import com.tspowell.grid.model.TObject
-import com.tspowell.grid.model.column.TColumn
+import com.tspowell.grid.model.column.Column
 
-case class TRow(cellValues: TObject*) extends TObject {
+case class Row(cellValues: TObject*) extends TObject {
   private val cells = cellValues.toArray
 
-  def orSetDefaults(columns: Map[String, TColumn[_]], columnsByIndex: IndexedSeq[String]): TRow = {
+  def orSetDefaults(columns: Map[String, Column[_]], columnsByIndex: IndexedSeq[String]): Row = {
     val cellValues = columnsByIndex.zipWithIndex.map { case (name: String, index: Int) =>
       val colDefault = columns(name).default.orNull
       val current: Option[TObject] = if (index < cells.length)
@@ -16,7 +16,7 @@ case class TRow(cellValues: TObject*) extends TObject {
       current.getOrElse(colDefault)
     }
 
-    TRow(cellValues.toIndexedSeq: _*)
+    Row(cellValues.toIndexedSeq: _*)
   }
 
   def getValues: Array[Object] = cells.map { cell =>

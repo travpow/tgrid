@@ -2,8 +2,8 @@ package com.tspowell.grid.model.column
 
 import java.util.Date
 
-import com.tspowell.grid.containers.TRow
-import com.tspowell.grid.model.{TObjectValue, TTable}
+import com.tspowell.grid.containers.Row
+import com.tspowell.grid.model.{TObjectValue, Table}
 
 import scala.annotation.tailrec
 
@@ -12,17 +12,17 @@ object Expression {
     Get(name)
   }
 
-  def getValue(table: TTable, row: TRow, name: String): Object = {
+  def getValue(table: Table, row: Row, name: String): Object = {
     row.cellValues(table.getColumnIndex(name))
   }
 }
 
 trait Expression extends ColumnOp {
-  def perform(table: TTable, row: TRow): Object
+  def perform(table: Table, row: Row): Object
 }
 
 case class L(value: Object) extends Expression {
-  def perform(table: TTable, row: TRow): Object = {
+  def perform(table: Table, row: Row): Object = {
     value
   }
 }
@@ -40,13 +40,13 @@ case class ToDouble(expression: Expression) extends Expression {
 
   }
 
-  def perform(table: TTable, row: TRow): Object = {
+  def perform(table: Table, row: Row): Object = {
     convertObject(expression.perform(table, row))
   }
 }
 
 case class Add(lhs: Expression, rhs: Expression) extends Expression {
-  def perform(table: TTable, row: TRow): Object = {
+  def perform(table: Table, row: Row): Object = {
     val result: java.lang.Double = ToDouble(lhs).perform(table, row).asInstanceOf[Double] +
       ToDouble(rhs).perform(table, row).asInstanceOf[Double]
 
@@ -55,7 +55,7 @@ case class Add(lhs: Expression, rhs: Expression) extends Expression {
 }
 
 case class Get(columnName: String) extends Expression {
-  def perform(table: TTable, row: TRow): Object = {
+  def perform(table: Table, row: Row): Object = {
     Expression.getValue(table, row, columnName)
   }
 }

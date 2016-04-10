@@ -8,9 +8,9 @@ object TGrid {
 }
 
 class TGrid {
-  private val buffer = new mutable.ArrayBuffer[TRow]
+  private val buffer = new mutable.ArrayBuffer[Row]
 
-  def append(rows: TRow*): Unit = {
+  def append(rows: Row*): Unit = {
     buffer.appendAll(rows.toList)
   }
 }
