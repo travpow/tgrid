@@ -1,7 +1,7 @@
 package com.tspowell.grid.model
 
 import com.tspowell.grid.containers.Row
-import com.tspowell.grid.model.column.{ColumnOp, Column}
+import com.tspowell.grid.model.column.Column
 
 import scala.collection.mutable
 
@@ -35,6 +35,10 @@ case class Table(name: String, parameters: TObject*) extends TObject {
   def size: Int = rows.length
   def getRows: Array[Array[Object]] = rows.toArray.map(_.getValues)
 
+  def where(predicate: (Row) => Boolean): Table = {
+    new Table(this.name, rows.filter(predicate):_*)
+  }
+
   private def fillIn(row: Row): Row = {
     Option(row).map {
       _.orSetDefaults(columns.toMap, columnsByIndex.toIndexedSeq)
@@ -42,6 +46,8 @@ case class Table(name: String, parameters: TObject*) extends TObject {
   }
 
   private def addParameterization(obj: TObject): Unit = obj match {
+    case row: Row =>
+      this.rows.append(row)
     case column: Column[_] =>
       column.forTable(this)
       columns(column.name) = column

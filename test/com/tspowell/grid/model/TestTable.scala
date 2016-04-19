@@ -1,13 +1,10 @@
-package com.tspowell.grid.test
+package com.tspowell.grid.model
 
-import java.text.SimpleDateFormat
-import java.time.Instant
 import java.util.Date
 
 import com.tspowell.grid.containers.Row
 import com.tspowell.grid.model.TObject._
 import com.tspowell.grid.model.column.{Add, Column, WithDefault}
-import com.tspowell.grid.model.{Projection, Table}
 
 object TestTable {
 
@@ -75,13 +72,32 @@ object TestTable {
 
     print(table2)
   }
+
+  def testWhere(): Unit = {
+    val table = Table("TestTable",
+      Column("Name",       classOf[String], WithDefault("Default value")),
+      Column("Age",        classOf[Int],    WithDefault(123)),
+      Column("Birth Date", classOf[Date])
+    )
+
+    table insert Row()
+    table insert Row("Real value", 100: Integer)
+    table insert Row("Missing number")
+
+    val table2 = table.where(r => r.getValues(1) == 100)
+    assert(table2.size == 1)
+    assert(table2.getRows(0)(0) == "Real value")
+    assert(table2.getRows(0)(1) == 100)
+    assert(table.size == 3, "Should not have modified original Table")
+  }
 }
 
 object Main extends App {
   override def main(args: Array[String]): Unit = {
     List[() => Unit](
       TestTable.test,
-      TestTable.test2
+      TestTable.test2,
+      TestTable.testWhere
     ).foreach(_())
 
     println("All tests passed.")
