@@ -19,4 +19,5 @@ object TObject {
   implicit def object2TObject(value: String): TObject            = TObjectValue(value)
   implicit def object2TObject(value: java.lang.Integer): TObject = TObjectValue(value)
   implicit def object2TObject(value: java.util.Date): TObject    = TObjectValue(value)
+  implicit def object2TObject(value: Object): TObject            = TObjectValue(value)
 }

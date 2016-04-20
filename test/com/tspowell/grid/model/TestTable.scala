@@ -1,10 +1,12 @@
 package com.tspowell.grid.model
 
+import java.time.Duration
 import java.util.Date
 
+import com.tspowell.grid.builtins.Today
 import com.tspowell.grid.containers.Row
 import com.tspowell.grid.model.TObject._
-import com.tspowell.grid.model.column.{Add, Column, WithDefault}
+import com.tspowell.grid.model.column.{Subtract, Add, Column, WithDefault}
 
 object TestTable {
 
@@ -33,13 +35,13 @@ object TestTable {
 
     val rows = table.getRows
 
-    assert(rows(0)(0) == "Default value",  s"Row(0) = ${rows(0)(0)}")
-    assert(rows(0)(1) == 123,              s"Row(1) = ${rows(0)(1)}")
-    assert(rows(0)(2) == null,             s"Row(2) = ${rows(0)(2)}")
-    assert(rows(1)(0) == "Real value",     s"Row(0) = ${rows(1)(0)}")
-    assert(rows(1)(1) == 100,              s"Row(1) = ${rows(1)(1)}")
-    assert(rows(2)(0) == "Missing number", s"Row(0) = ${rows(1)(0)}")
-    assert(rows(2)(1) == 123,              s"Row(1) = ${rows(1)(1)}")
+    assert(rows(0)(0) == "Default value",           s"Row(0) = ${rows(0)(0)}")
+    assert(rows(0)(1).asInstanceOf[Integer] == 123, s"Row(1) = ${rows(0)(1)}")
+    assert(rows(0)(2) == null,                      s"Row(2) = ${rows(0)(2)}")
+    assert(rows(1)(0) == "Real value",              s"Row(0) = ${rows(1)(0)}")
+    assert(rows(1)(1).asInstanceOf[Integer] == 100, s"Row(1) = ${rows(1)(1)}")
+    assert(rows(2)(0) == "Missing number",          s"Row(0) = ${rows(1)(0)}")
+    assert(rows(2)(1).asInstanceOf[Integer] == 123, s"Row(1) = ${rows(1)(1)}")
   }
 
   def test2() {
@@ -56,7 +58,7 @@ object TestTable {
 
     val table2 = Table("Test2Table",
       projectedTable,
-      Column("Birth Date", classOf[Date]), 
+      Column("Birth Date", classOf[Date]),
       Column("One",        classOf[Int], WithDefault(1)),
       Column("Two",        classOf[Int], WithDefault(2)),
       Column("AddExpr",    classOf[Int], Add("One", "Two")))
@@ -68,7 +70,7 @@ object TestTable {
 
     // Test table calculation
     val row = Row("Travis", new Date(2000, 1, 1), 2: Integer, 4: Integer)
-    assert(addExpr.get.perform(table2, row) == 6)
+    assert(addExpr.get.perform(table2, row).asInstanceOf[Double].toInt == 6)
 
     print(table2)
   }
@@ -84,11 +86,38 @@ object TestTable {
     table insert Row("Real value", 100: Integer)
     table insert Row("Missing number")
 
-    val table2 = table.where(r => r.getValues(1) == 100)
+    val table2 = table.where(r => r.getValues(1).asInstanceOf[Integer] == 100)
     assert(table2.size == 1)
     assert(table2.getRows(0)(0) == "Real value")
-    assert(table2.getRows(0)(1) == 100)
+    assert(table2.getRows(0)(1).asInstanceOf[Integer] == 100)
     assert(table.size == 3, "Should not have modified original Table")
+  }
+
+  def testDependency(): Unit = {
+    val table = Table("TestTable",
+      Column("Name",        classOf[String], WithDefault("John Doe")),
+      Column("Birth Date",  classOf[Date])
+    )
+
+    class MockToday() extends Today {
+      override def perform(table: Table, row: Row): Object = {
+        new Date(2001,1,1)
+      }
+    }
+
+    val dependentTable = Table("DepTable", table)
+    val derivedTable = Table("DerivedTable", dependentTable,
+      Column("Age", classOf[Double], Subtract(new MockToday(), "Birth Date")))
+
+    table insert Row("Travis", new Date(2000, 1, 1))
+
+    assert(dependentTable.getRows(0)(0) == "Travis")
+    val derivedRows = derivedTable.getRows
+    assert(derivedRows.length == 1)
+    assert(derivedRows(0).length == 3)
+
+    val ageInSeconds = derivedRows(0)(2).asInstanceOf[Double].toInt
+    assert(Duration.ofSeconds(ageInSeconds).toDays == 365 /* days */)
   }
 }
 
@@ -97,7 +126,8 @@ object Main extends App {
     List[() => Unit](
       TestTable.test,
       TestTable.test2,
-      TestTable.testWhere
+      TestTable.testWhere,
+      TestTable.testDependency
     ).foreach(_())
 
     println("All tests passed.")
