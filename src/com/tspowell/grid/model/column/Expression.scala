@@ -1,7 +1,5 @@
 package com.tspowell.grid.model.column
 
-import java.util.Date
-
 import com.tspowell.grid.containers.Row
 import com.tspowell.grid.model.Table
 

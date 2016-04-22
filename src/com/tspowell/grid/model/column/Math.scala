@@ -9,11 +9,10 @@ import com.tspowell.grid.util.Conversions.ToDouble
   */
 case class Add(lhs: Expression, rhs: Expression) extends Expression {
   def perform(table: Table, row: Row): java.lang.Double = {
-    val left = ToDouble(lhs)
-    val leftP = left.perform(table, row)
+    val left = ToDouble(lhs).perform(table, row)
     val right = ToDouble(rhs).perform(table, row)
 
-    leftP.asInstanceOf[Double] + right.asInstanceOf[Double]
+    left.asInstanceOf[Double] + right.asInstanceOf[Double]
   }
 }
 

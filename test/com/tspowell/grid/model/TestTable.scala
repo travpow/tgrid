@@ -6,7 +6,7 @@ import java.util.Date
 import com.tspowell.grid.builtins.Today
 import com.tspowell.grid.containers.Row
 import com.tspowell.grid.model.TObject._
-import com.tspowell.grid.model.column.{Subtract, Add, Column, WithDefault}
+import com.tspowell.grid.model.column._
 
 object TestTable {
 
@@ -119,6 +119,30 @@ object TestTable {
     val ageInSeconds = derivedRows(0)(2).asInstanceOf[Double].toInt
     assert(Duration.ofSeconds(ageInSeconds).toDays == 365 /* days */)
   }
+
+  def testInsertManyRows(): Unit = {
+    val table = Table("Big Table",
+      Column("String", classOf[String]),
+      Column("Double", classOf[Double], WithDefault(0)))
+
+    val calcTable = Table("Calc'ed Table",
+      table,
+      Column("Increment", classOf[Int], Add("Double", L(1: Integer))))
+
+    println("Inserting 100k rows...")
+
+    val MAX = 100000
+
+    for (i <- 0 until MAX) {
+      table insert Row("First")
+      table insert Row("Second", i: Integer)
+    }
+
+    println("All rows inserted.")
+
+    assert(table.size == 2 * MAX)
+    assert(table.where(x => x.cellValues.head.unwrap == "First").size == MAX)
+  }
 }
 
 object Main extends App {
@@ -127,7 +151,8 @@ object Main extends App {
       TestTable.test,
       TestTable.test2,
       TestTable.testWhere,
-      TestTable.testDependency
+      TestTable.testDependency,
+      TestTable.testInsertManyRows
     ).foreach(_())
 
     println("All tests passed.")

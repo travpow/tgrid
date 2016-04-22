@@ -76,6 +76,6 @@ case class Table(name: String, parameters: TObject*) extends TObject {
         }
       }
     case _ =>
-      throw new UnsupportedOperationException(s"Could not apply parameterization of type [${obj.getClass}] to table.")
+      throw new UnsupportedOperationException(s"Could not apply parameterization of type [${obj.getClass}] to table: " + obj)
   }
 }
