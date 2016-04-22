@@ -16,7 +16,7 @@ case class Column[T](name: String, typeClass: Class[T], definitions: ColumnOp*) 
       case WithDefault(defaultValue) => TObjectValue(defaultValue.asInstanceOf[Object])
     }.lastOption
 
-  val expression = definitions
+  val expression: Option[Expression] = definitions
     .filter(_.isInstanceOf[Expression])
     .map(_.asInstanceOf[Expression]).lastOption
 

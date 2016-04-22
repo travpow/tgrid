@@ -1,17 +1,20 @@
 package com.tspowell.grid.containers
 
-import com.tspowell.grid.model.TObject
+import com.tspowell.grid.model.{Table, TObject}
 import com.tspowell.grid.model.column.Column
 
 case class Row(cellValues: TObject*) extends TObject {
   private val cells = cellValues.toArray
 
-  def orSetDefaults(columns: Map[String, Column[_]], columnsByIndex: IndexedSeq[String]): Row = {
-    val cellValues = columnsByIndex.zipWithIndex.map { case (name: String, index: Int) =>
-      val colDefault = columns(name).default.orNull
-      val current: Option[TObject] = if (index < cells.length)
+  def orSetValue(table: Table, columns: IndexedSeq[(String,Column[_])]): Row = {
+    val cellValues = columns.zipWithIndex.map { case ((_: String, column: Column[_]), index: Int) =>
+      val colDefault = column.default.orNull
+
+      val current: Option[TObject] = if (column.expression.isDefined) {
+        Some(column.expression.get.perform(table, this))
+      } else if (index < cells.length) {
         Some(cells(index))
-      else None
+      } else None
 
       current.getOrElse(colDefault)
     }

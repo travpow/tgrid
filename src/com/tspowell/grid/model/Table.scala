@@ -1,7 +1,7 @@
 package com.tspowell.grid.model
 
 import com.tspowell.grid.containers.Row
-import com.tspowell.grid.model.column.Column
+import com.tspowell.grid.model.column.{Expression, Column}
 
 import scala.collection.mutable
 
@@ -10,7 +10,7 @@ case class Table(name: String, parameters: TObject*) extends TObject {
   private val rows = new mutable.ArrayBuffer[Row]
   private val dependencies = new mutable.LinkedHashSet[Table]
   private val dataSources = new mutable.LinkedHashSet[TDataSource]
-  private val listeners = new mutable.HashSet[TableListener]
+  private val listeners = new mutable.HashSet[TableListener]()
 
   private lazy val defaultRow = Row(columns.values.map(_.default.orNull).toSeq: _*)
   private lazy val columnsByIndex = columns.keys.toArray
@@ -26,7 +26,10 @@ case class Table(name: String, parameters: TObject*) extends TObject {
       throw new RuntimeException("Not allowed to insert data into a table listening to external data sources.")
     }
 
-    rows += fillIn(row)
+    val calculated = fillIn(row)
+    rows += calculated
+
+    dependencies.foreach(_ insert calculated)
   }
 
   def getColumns: Array[Column[_]] = columns.values.toArray
@@ -41,13 +44,13 @@ case class Table(name: String, parameters: TObject*) extends TObject {
 
   private def fillIn(row: Row): Row = {
     Option(row).map {
-      _.orSetDefaults(columns.toMap, columnsByIndex.toIndexedSeq)
+      _.orSetValue(this, columns.toIndexedSeq)
     }.getOrElse(defaultRow)
   }
 
   private def addParameterization(obj: TObject): Unit = obj match {
     case row: Row =>
-      this.rows.append(row)
+      rows.append(row)
     case column: Column[_] =>
       column.forTable(this)
       columns(column.name) = column
@@ -73,6 +76,6 @@ case class Table(name: String, parameters: TObject*) extends TObject {
         }
       }
     case _ =>
-      throw new UnsupportedOperationException(s"Could not apply parameterization of type [${obj.getClass}] to table.")
+      throw new UnsupportedOperationException(s"Could not apply parameterization of type [${obj.getClass}] to table: " + obj)
   }
 }
