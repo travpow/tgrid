@@ -1,6 +1,6 @@
 package com.tspowell.grid.containers
 
-import com.tspowell.grid.model.{Table, TObject}
+import com.tspowell.grid.model.{TObjectValue, Table, TObject}
 import com.tspowell.grid.model.column.Column
 
 import scala.collection.mutable
@@ -13,7 +13,7 @@ object Row {
       val colDefault: TObject = column.default.orNull
 
       if (column.expression.isDefined) {
-        val calculated: TObject = column.expression.get.perform(table, accum)
+        val calculated: TObject = TObjectValue(column.expression.get.perform(table, accum))
         Row(accum.cellValues :+ calculated: _*)
       } else if (index >= accum.cells.length) {
         Row(accum.cellValues :+ colDefault: _*)
@@ -30,7 +30,7 @@ object Row {
       val colDefault: TObject = column.default.orNull
 
       val cellValue: Option[TObject] = if (column.expression.isDefined) {
-        Some(column.expression.get.perform(table, Row(cells.toIndexedSeq: _*)))
+        Some(TObjectValue(column.expression.get.perform(table, Row(cells.toIndexedSeq: _*))))
       } else if (index < row.cells.length) {
         Some(row.cells(index))
       } else {

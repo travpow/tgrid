@@ -17,8 +17,7 @@ case class Add(lhs: Expression, rhs: Expression) extends Expression(lhs,rhs) {
       case (leftDate: LocalDate, rightDuration: Duration) =>
         leftDate.plusDays(rightDuration.toDays)
       case (_, _) =>
-        val sum: Double = ToDouble.convert(left) + ToDouble.convert(right)
-        sum
+        ToDouble.convert(left) + ToDouble.convert(right): Double
     }
   }
 }
@@ -33,8 +32,29 @@ case class Subtract(lhs: Expression, rhs: Expression) extends Expression(lhs, rh
         val left = ToDouble(lhs).perform(table, row)
         val right = ToDouble(rhs).perform(table, row)
 
-        val difference: Double = left.asInstanceOf[Double] - right.asInstanceOf[Double]
-        difference
+        left.asInstanceOf[Double] - right.asInstanceOf[Double]: Double
+    }
+  }
+}
+
+case class Mul(lhs: Expression, rhs: Expression) extends Expression(lhs,rhs) {
+  def perform(table: Table, row: Row): Object = {
+    val left = ToDouble(lhs).perform(table, row)
+    val right = ToDouble(rhs).perform(table, row)
+
+    left.asInstanceOf[Double] * right.asInstanceOf[Double]: Double
+  }
+}
+
+case class Div(lhs: Expression, rhs: Expression) extends Expression(lhs, rhs) {
+  def perform(table: Table, row: Row): Object = {
+    val left = ToDouble(lhs).perform(table, row)
+    val right = ToDouble(rhs).perform(table, row)
+
+    if (right.asInstanceOf[Double] == 0.0) {
+      Double.NaN: Double
+    } else {
+      left.asInstanceOf[Double] / right.asInstanceOf[Double]: Double
     }
   }
 }
