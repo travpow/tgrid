@@ -29,7 +29,7 @@ class MathTests extends TestCase {
     Assert.assertEquals(0.0,        rows(0)(3))
 
     Assert.assertEquals(0.75,       rows(1)(2))
-    Assert.assertEquals(12.0,         rows(1)(3))
+    Assert.assertEquals(12.0,       rows(1)(3))
 
     Assert.assertEquals(Double.NaN, rows(2)(2))
     Assert.assertEquals(0.0,        rows(2)(3))

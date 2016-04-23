@@ -21,5 +21,4 @@ object TObject {
   implicit def object2TObject(value: java.time.LocalDate): TObject    = TObjectValue(value)
   implicit def object2TObject(value: java.time.Duration): TObject = TObjectValue(value)
   implicit def object2TObject(value: java.lang.Double): TObject = TObjectValue(value)
-  //implicit def object2TObject(value: Object): TObject            = TObjectValue(value)
 }
