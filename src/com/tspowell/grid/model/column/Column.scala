@@ -23,4 +23,8 @@ case class Column[T](name: String, typeClass: Class[T], definitions: ColumnOp*) 
   def forTable(table: Table): Unit = {
     tables += table
   }
+
+  def validate(columns: Set[String]): Unit = {
+    expression.foreach(_.validate(columns))
+  }
 }
