@@ -1,9 +1,9 @@
-package com.tspowell.grid.model
+package com.tspowell.grid.builtins
 
 import java.lang.Double
 
-import com.tspowell.grid.builtins.{Mul, Div}
 import com.tspowell.grid.containers.Row
+import com.tspowell.grid.model.Table
 import com.tspowell.grid.model.column.Column
 import junit.framework.TestCase
 import org.junit.Assert
