@@ -12,7 +12,7 @@ case class Table(name: String, parameters: TObject*) extends TObject {
   private val dataSources = new mutable.LinkedHashSet[TDataSource]
   private val listeners = new mutable.HashSet[TableListener]()
 
-  private lazy val defaultRow = Row(columns.values.map(_.default.orNull).toSeq: _*)
+  private lazy val defaultRow = Row(columns.values.map(_.default.orNull).toArray[TObject])
   private lazy val columnsByIndex = columns.keys.toArray
 
   parameters.toList.foreach(addParameterization)

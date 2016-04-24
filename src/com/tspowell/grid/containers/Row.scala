@@ -14,9 +14,9 @@ object Row {
 
       if (column.expression.isDefined) {
         val calculated: TObject = TObjectValue(column.expression.get.perform(table, accum))
-        Row(accum.cellValues :+ calculated: _*)
+        Row(accum.cells :+ calculated)
       } else if (index >= accum.cells.length) {
-        Row(accum.cellValues :+ colDefault: _*)
+        Row(accum.cells :+ colDefault)
       } else {
         accum
       }
@@ -30,7 +30,7 @@ object Row {
       val colDefault: TObject = column.default.orNull
 
       val cellValue: Option[TObject] = if (column.expression.isDefined) {
-        Some(TObjectValue(column.expression.get.perform(table, Row(cells.toIndexedSeq: _*))))
+        Some(TObjectValue(column.expression.get.perform(table, Row(cells.toArray))))
       } else if (index < row.cells.length) {
         Some(row.cells(index))
       } else {
@@ -40,13 +40,13 @@ object Row {
       cells += cellValue.getOrElse(colDefault)
     }
 
-    Row(cells.toIndexedSeq: _*)
+    Row(cells.toArray)
   }
+
+  def apply(cellValues: TObject*): Row = Row(cellValues.toArray)
 }
 
-case class Row(cellValues: TObject*) extends TObject {
-  private val cells: Array[TObject] = cellValues.toArray
-
+case class Row(cells: Array[TObject]) extends TObject {
   def getValues: Array[Object] = cells.map { cell =>
     Option(cell).map(_.unwrap).orNull
   }

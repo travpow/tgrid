@@ -2,7 +2,7 @@ package com.tspowell.grid.model
 
 import java.time.{Duration, LocalDate, Month}
 
-import com.tspowell.grid.builtins.{Subtract, Add, Today}
+import com.tspowell.grid.builtins.{Add, Subtract, Today}
 import com.tspowell.grid.containers.Row
 import com.tspowell.grid.model.TObject._
 import com.tspowell.grid.model.column._
@@ -162,6 +162,6 @@ class TableTests extends TestCase {
     println("All rows inserted.")
 
     Assert.assertEquals(table.size, 2 * MAX)
-    Assert.assertEquals(table.where(x => x.cellValues.head.unwrap == "First").size, MAX)
+    Assert.assertEquals(table.where(x => x.cells.head.unwrap == "First").size, MAX)
   }
 }

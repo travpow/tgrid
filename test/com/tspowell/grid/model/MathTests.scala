@@ -17,7 +17,9 @@ class MathTests extends TestCase {
       Column("Mul", classOf[Double], Mul("LHS", "RHS")))
 
     List[(Double, Double)](
-      (0.0,1.0), (3.0,4.0), (5.0,0.0)
+      (0.0, 1.0),
+      (3.0, 4.0),
+      (5.0, 0.0)
     ).foreach { case (one, two) =>
       table insert Row(one, two)
     }
