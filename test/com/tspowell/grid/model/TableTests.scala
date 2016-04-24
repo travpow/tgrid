@@ -1,13 +1,14 @@
 package com.tspowell.grid.model
 
-import java.time.{LocalDate, Month}
+import java.time.{Duration, LocalDate, Month}
 
-import com.tspowell.grid.builtins.Today
+import com.tspowell.grid.builtins.{Add, Subtract, Today}
 import com.tspowell.grid.containers.Row
 import com.tspowell.grid.model.TObject._
 import com.tspowell.grid.model.column._
 import junit.framework.TestCase
 import org.junit.Assert
+import org.scalatest.Assertions.intercept
 
 class TableTests extends TestCase {
 
@@ -108,17 +109,36 @@ class TableTests extends TestCase {
 
     val dependentTable = Table("DepTable", table)
     val derivedTable = Table("DerivedTable", dependentTable,
-      Column("Age", classOf[Double], Subtract(new MockToday(), "Birth Date")))
+      Column("Age",      classOf[Duration], Subtract(new MockToday(), "Birth Date")),
+      Column("Relative", classOf[LocalDate], Add(L(LocalDate.of(1776, Month.JULY, 4)), "Age"))) // Relative age for a previously-calculated column
 
     table insert Row("Travis", LocalDate.of(2000, Month.JANUARY, 1))
 
     Assert.assertEquals(dependentTable.getRows(0)(0), "Travis")
     val derivedRows = derivedTable.getRows
     Assert.assertEquals(derivedRows.length, 1)
-    Assert.assertEquals(derivedRows(0).length, 3)
+    Assert.assertEquals(derivedRows(0).length, 4)
 
-    val ageInSeconds = derivedRows(0)(2).asInstanceOf[Double].toInt
-    Assert.assertEquals(ageInSeconds, 31622400 )
+    val age = derivedRows(0)(2).asInstanceOf[Duration]
+    Assert.assertEquals(366 /* days */, age.toDays)
+
+    val relative = derivedRows(0)(3).asInstanceOf[LocalDate]
+    Assert.assertEquals(LocalDate.of(1777, Month.JULY, 5), relative)
+  }
+
+  def testInvalidColumnDefinition(): Unit = {
+    val table = Table("TestTable",
+      Column("Name",        classOf[String]),
+      Column("Birth Date",  classOf[LocalDate])
+    )
+
+    val dependentTable = Table("DepTable", table)
+
+    intercept[IllegalArgumentException] {
+      // Pricing date is not defined
+      Table("DerivedTable", dependentTable,
+        Column("Age", classOf[Duration], Subtract("Pricing Date", "Birth Date")))
+    }
   }
 
   def testInsertManyRows(): Unit = {
@@ -142,6 +162,6 @@ class TableTests extends TestCase {
     println("All rows inserted.")
 
     Assert.assertEquals(table.size, 2 * MAX)
-    Assert.assertEquals(table.where(x => x.cellValues.head.unwrap == "First").size, MAX)
+    Assert.assertEquals(table.where(x => x.cells.head.unwrap == "First").size, MAX)
   }
 }

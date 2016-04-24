@@ -9,12 +9,18 @@ object Expression {
   }
 
   def getValue(table: Table, row: Row, name: String): Object = {
-    row.cellValues(table.getColumnIndex(name))
+    val index = table.getColumnIndex(name)
+    row.getValues(index)
   }
 }
 
-trait Expression extends ColumnOp {
+abstract class Expression(dependencies: Expression*) extends ColumnOp {
   def perform(table: Table, row: Row): Object
+  def validate(columns: Set[String]): Unit = {
+    dependencies.foreach {
+      _.validate(columns)
+    }
+  }
 }
 
 case class L(value: Object) extends Expression {
@@ -26,5 +32,11 @@ case class L(value: Object) extends Expression {
 case class Get(columnName: String) extends Expression {
   def perform(table: Table, row: Row): Object = {
     Expression.getValue(table, row, columnName)
+  }
+
+  override def validate(columns: Set[String]): Unit = {
+    if (!columns.contains(columnName)) {
+      throw new IllegalArgumentException(s"Invalid column name to Get() expression: [$columnName], column must have a concrete definition in this table or a dependency table.")
+    }
   }
 }

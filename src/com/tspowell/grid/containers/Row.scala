@@ -1,27 +1,52 @@
 package com.tspowell.grid.containers
 
-import com.tspowell.grid.model.{Table, TObject}
+import com.tspowell.grid.model.{TObjectValue, Table, TObject}
 import com.tspowell.grid.model.column.Column
 
-case class Row(cellValues: TObject*) extends TObject {
-  private val cells = cellValues.toArray
+import scala.collection.mutable
 
-  def orSetValue(table: Table, columns: IndexedSeq[(String,Column[_])]): Row = {
-    val cellValues = columns.zipWithIndex.map { case ((_: String, column: Column[_]), index: Int) =>
-      val colDefault = column.default.orNull
+object Row {
+  // TODO: Choose function or procedural implementation
 
-      val current: Option[TObject] = if (column.expression.isDefined) {
-        Some(column.expression.get.perform(table, this))
-      } else if (index < cells.length) {
-        Some(cells(index))
-      } else None
+  def orSetValue(table: Table, row: Row, columns: IndexedSeq[(String,Column[_])]): Row = {
+    columns.zipWithIndex.foldLeft(row) { case (accum, ((name, column), index)) =>
+      val colDefault: TObject = column.default.orNull
 
-      current.getOrElse(colDefault)
+      if (column.expression.isDefined) {
+        val calculated: TObject = TObjectValue(column.expression.get.perform(table, accum))
+        Row(accum.cells :+ calculated)
+      } else if (index >= accum.cells.length) {
+        Row(accum.cells :+ colDefault)
+      } else {
+        accum
+      }
     }
-
-    Row(cellValues.toIndexedSeq: _*)
   }
 
+  def __orSetValue(table: Table, row: Row, columns: IndexedSeq[(String,Column[_])]): Row = {
+    val cells = new mutable.ArrayBuffer[TObject](columns.size)
+
+    columns.zipWithIndex.foreach { case ((name, column), index) =>
+      val colDefault: TObject = column.default.orNull
+
+      val cellValue: Option[TObject] = if (column.expression.isDefined) {
+        Some(TObjectValue(column.expression.get.perform(table, Row(cells.toArray))))
+      } else if (index < row.cells.length) {
+        Some(row.cells(index))
+      } else {
+        None
+      }
+
+      cells += cellValue.getOrElse(colDefault)
+    }
+
+    Row(cells.toArray)
+  }
+
+  def apply(cellValues: TObject*): Row = Row(cellValues.toArray)
+}
+
+case class Row(cells: Array[TObject]) extends TObject {
   def getValues: Array[Object] = cells.map { cell =>
     Option(cell).map(_.unwrap).orNull
   }

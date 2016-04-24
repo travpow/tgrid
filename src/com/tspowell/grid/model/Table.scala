@@ -12,7 +12,7 @@ case class Table(name: String, parameters: TObject*) extends TObject {
   private val dataSources = new mutable.LinkedHashSet[TDataSource]
   private val listeners = new mutable.HashSet[TableListener]()
 
-  private lazy val defaultRow = Row(columns.values.map(_.default.orNull).toSeq: _*)
+  private lazy val defaultRow = Row(columns.values.map(_.default.orNull).toArray[TObject])
   private lazy val columnsByIndex = columns.keys.toArray
 
   parameters.toList.foreach(addParameterization)
@@ -44,8 +44,24 @@ case class Table(name: String, parameters: TObject*) extends TObject {
 
   private def fillIn(row: Row): Row = {
     Option(row).map {
-      _.orSetValue(this, columns.toIndexedSeq)
+      Row.orSetValue(this, _, columns.toIndexedSeq)
+      // Row.__orSetValue(this, _, columns.toIndexedSeq)
     }.getOrElse(defaultRow)
+  }
+
+  private def projectTable(projection: Projection): Unit = {
+    projection.table.addDependency(this)
+    projection.table.getColumns.foreach { otherColumn =>
+      val shouldAddColumn = !projection.exclude.contains(otherColumn.name) &&
+        (projection.include.isEmpty || projection.include.contains(otherColumn.name))
+
+      if (shouldAddColumn) {
+        val currentName = otherColumn.name
+        val newName = projection.rename.getOrElse(currentName, currentName)
+        val newColumn = Column(newName, otherColumn.typeClass, otherColumn.definitions: _*)
+        columns(projection.rename(currentName)) = newColumn
+      }
+    }
   }
 
   private def addParameterization(obj: TObject): Unit = obj match {
@@ -53,6 +69,7 @@ case class Table(name: String, parameters: TObject*) extends TObject {
       rows.append(row)
     case column: Column[_] =>
       column.forTable(this)
+      column.validate(columns.keySet.toSet)
       columns(column.name) = column
     case table: Table =>
       table.addDependency(this)
@@ -63,18 +80,7 @@ case class Table(name: String, parameters: TObject*) extends TObject {
     case TDataSource(dataSourceName) =>
       println(s"Populating $name from $dataSourceName")
     case projection: Projection =>
-      projection.table.addDependency(this)
-      projection.table.getColumns.foreach { otherColumn =>
-        val shouldAddColumn = !projection.exclude.contains(otherColumn.name) &&
-          (projection.include.isEmpty || projection.include.contains(otherColumn.name))
-
-        if (shouldAddColumn) {
-          val currentName = otherColumn.name
-          val newName = projection.rename.getOrElse(currentName, currentName)
-          val newColumn = Column(newName, otherColumn.typeClass, otherColumn.definitions: _*)
-          columns(projection.rename(currentName)) = newColumn
-        }
-      }
+      projectTable(projection)
     case _ =>
       throw new UnsupportedOperationException(s"Could not apply parameterization of type [${obj.getClass}] to table: " + obj)
   }
