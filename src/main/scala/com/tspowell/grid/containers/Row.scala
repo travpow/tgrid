@@ -23,26 +23,6 @@ object Row {
     }
   }
 
-  def __orSetValue(table: Table, row: Row, columns: IndexedSeq[(String,Column[_])]): Row = {
-    val cells = new mutable.ArrayBuffer[TObject](columns.size)
-
-    columns.zipWithIndex.foreach { case ((name, column), index) =>
-      val colDefault: TObject = column.default.orNull
-
-      val cellValue: Option[TObject] = if (column.expression.isDefined) {
-        Some(TObjectValue(column.expression.get.perform(table, Row(cells.toArray))))
-      } else if (index < row.cells.length) {
-        Some(row.cells(index))
-      } else {
-        None
-      }
-
-      cells += cellValue.getOrElse(colDefault)
-    }
-
-    Row(cells.toArray)
-  }
-
   def apply(cellValues: TObject*): Row = Row(cellValues.toArray)
 }
 
