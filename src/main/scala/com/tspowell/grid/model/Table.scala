@@ -9,7 +9,7 @@ case class Table(name: String, parameters: TObject*) extends TObject {
   private val columns = new mutable.LinkedHashMap[String, Column[_]]
   private val rows = new mutable.ArrayBuffer[Row]
   private val dependencies = new mutable.LinkedHashSet[Table]
-  private val dataSources = new mutable.LinkedHashSet[TDataSource]
+  private val dataSources = new mutable.LinkedHashSet[DataSource]
   private val listeners = new mutable.HashSet[TableListener]()
 
   private lazy val defaultRow = Row(columns.values.map(_.default.orNull).toArray[TObject])
@@ -45,7 +45,6 @@ case class Table(name: String, parameters: TObject*) extends TObject {
   private def fillIn(row: Row): Row = {
     Option(row).map {
       Row.orSetValue(this, _, columns.toIndexedSeq)
-      // Row.__orSetValue(this, _, columns.toIndexedSeq)
     }.getOrElse(defaultRow)
   }
 
@@ -77,8 +76,8 @@ case class Table(name: String, parameters: TObject*) extends TObject {
         println(s"Adding column from table [${table.name}]: $otherColumn")
         columns(otherColumn.name) = otherColumn
       }
-    case TDataSource(dataSourceName) =>
-      println(s"Populating $name from $dataSourceName")
+    case dataSource: DataSource =>
+      println(s"Populating $name from ${dataSource.name}")
     case projection: Projection =>
       projectTable(projection)
     case _ =>

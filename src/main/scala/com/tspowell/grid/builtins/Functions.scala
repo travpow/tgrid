@@ -1,10 +1,13 @@
 package com.tspowell.grid.builtins
 
-import java.time.{Period, Duration, LocalDate}
+import java.lang.{Object, Integer}
+import java.time.{Duration, LocalDate}
 
 import com.tspowell.grid.containers.Row
-import com.tspowell.grid.model.{TObject, Table}
+import com.tspowell.grid.model.Table
 import com.tspowell.grid.model.column.Expression
+
+import scala.Option
 
 case class Today() extends Expression {
   override def perform(table: Table, row: Row): Object = {
@@ -31,3 +34,13 @@ case class Str(strings: Expression*) extends Expression(strings: _*) {
   }
 }
 
+case class Else(lhs: Expression, rhs: Expression) extends Expression(lhs, rhs) {
+  override def perform(table: Table, row: Row): Object = {
+    lhs.perform(table, row) match {
+      case value: Object if Option(value).isEmpty =>
+        rhs.perform(table, row)
+      case left =>
+        left
+    }
+  }
+}

@@ -14,8 +14,10 @@ case class Add(lhs: Expression, rhs: Expression) extends Expression(lhs,rhs) {
     val right = rhs.perform(table, row)
 
     (left, right) match {
-      case (leftDate: LocalDate, rightDuration: Duration) =>
-        leftDate.plusDays(rightDuration.toDays)
+      case (date: LocalDate, duration: Duration) =>
+        date.plusDays(duration.toDays)
+      case (duration: Duration, date: LocalDate) =>
+        date.plusDays(duration.toDays)
       case (_, _) =>
         ToDouble.convert(left) + ToDouble.convert(right): Double
     }
@@ -56,5 +58,14 @@ case class Div(lhs: Expression, rhs: Expression) extends Expression(lhs, rhs) {
     } else {
       left.asInstanceOf[Double] / right.asInstanceOf[Double]: Double
     }
+  }
+}
+
+case class Max(lhs: Expression, rhs: Expression) extends Expression(lhs, rhs) {
+  override def perform(table: Table, row: Row): Object = {
+    val left = ToDouble(lhs).perform(table, row).asInstanceOf[Double]
+    val right = ToDouble(rhs).perform(table, row).asInstanceOf[Double]
+
+    Math.max(left, right): Double
   }
 }

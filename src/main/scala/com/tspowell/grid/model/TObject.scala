@@ -16,9 +16,9 @@ case class TObjectValue(value: Object) extends TObject {
 // Internal TObject type mappings
 
 object TObject {
-  implicit def object2TObject(value: String): TObject            = TObjectValue(value)
-  implicit def object2TObject(value: java.lang.Integer): TObject = TObjectValue(value)
-  implicit def object2TObject(value: java.time.LocalDate): TObject    = TObjectValue(value)
-  implicit def object2TObject(value: java.time.Duration): TObject = TObjectValue(value)
-  implicit def object2TObject(value: java.lang.Double): TObject = TObjectValue(value)
+  implicit def object2TObject(value: String): TObject                = TObjectValue(value)
+  implicit def object2TObject(value: java.lang.Integer): TObject     = TObjectValue(value)
+  implicit def object2TObject(value: java.time.LocalDate): TObject   = TObjectValue(value)
+  implicit def object2TObject(value: java.time.Duration): TObject    = TObjectValue(value)
+  implicit def object2TObject(value: java.lang.Double): TObject      = TObjectValue(value)
 }
